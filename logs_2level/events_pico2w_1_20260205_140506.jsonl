@@ -1,0 +1,47 @@
+{"ts_ms":1770293106586,"device":"pico2w_1","event":"device_registered"}
+{"ts_ms":1770293106898,"device":"pico2w_1","event":"auto_provision_check_start"}
+{"ts_ms":1770293106898,"device":"pico2w_1","event":"auto_provision_sanity_full_attest_start"}
+{"ts_ms":1770293107092,"device":"pico2w_1","event":"initial_full_attest_start"}
+{"ts_ms":1770293108456,"device":"pico2w_1","event":"auto_provision_sanity_full_attest_done","verify_ok":false,"verify_reason":"nonce_bound_mismatch"}
+{"ts_ms":1770293109904,"device":"pico2w_1","event":"quarantine_entered","reason":"full_hash_failed_2x:nonce_bound_mismatch","full_hash_fail_streak":2}
+{"ts_ms":1770293109905,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293109905,"device":"pico2w_1","event":"quarantine_skip_policy_attest","policy_attest_kind":"AttestKind.PARTIAL","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293109905,"device":"pico2w_1","event":"quarantine_recheck_start","interval_s":40.0}
+{"ts_ms":1770293111326,"device":"pico2w_1","event":"quarantine_recheck_done","verify_ok":false,"verify_reason":"nonce_bound_mismatch"}
+{"ts_ms":1770293111562,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293111993,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293112473,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293112910,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293113361,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293113812,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293114249,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293114719,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293115195,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293115702,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293115951,"device":"pico2w_1","event":"quarantine_skip_policy_attest","policy_attest_kind":"AttestKind.PARTIAL","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293116171,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293116641,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293117123,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293117593,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293118058,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293118524,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293118997,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293119486,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293119982,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293120446,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293120925,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293121393,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293121875,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293122097,"device":"pico2w_1","event":"quarantine_skip_policy_attest","policy_attest_kind":"AttestKind.PARTIAL","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293122324,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293122791,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293123293,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293123743,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293124196,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293124671,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293125124,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293125561,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293125975,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293126425,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293126920,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
+{"ts_ms":1770293127374,"device":"pico2w_1","event":"quarantine_skip_get_windows","policy_reason":"init | stable_gate=UNCERTAIN stable_wl=UNKNOWN stable_attack=UNKNOWN"}
