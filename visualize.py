@@ -1,22 +1,8 @@
 """
 Visualize separability of SAFE vs COMPROMISED windows from your JSONL logs.
 
-What it does:
-1) Loads JSONL files (safe + compromised).
-2) Builds the SAME ratio features you use in Level-1 training:
-   - cyc_per_us, lsu_per_cyc, cpi_per_cyc, exc_per_cyc, fold_per_cyc
-3) (Optional) Builds rolling aggregated features over W windows (mean/std/min/max),
-   per device_id_str (same idea as your training script).
-4) Produces:
-   - Per-feature overlay histograms (safe vs compromised)
-   - Per-feature boxplots
-   - PCA 2D scatter plot (quick “are these clusters separable?” sanity check)
-
-No seaborn, only matplotlib.
-Each figure is its own plot (no subplots), saved under --outdir.
-
-
- python visualize.py --safe train_logs/safe1.jsonl train_logs/safe2.jsonl --comp train_logs/memscan.jsonl train_logs/alu.jsonl
+USAGE: 
+python visualize.py --safe train_logs/safe1.jsonl train_logs/safe2.jsonl --comp train_logs/memscan.jsonl train_logs/alu.jsonl
  --use_rolling --W 5 --outdir viz_rolling_W5
 """
 
