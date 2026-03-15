@@ -1,4 +1,4 @@
-# verifier_policy_server.py
+# verifier_policy_server_final.py
 import os
 from pathlib import Path
 import asyncio
@@ -41,7 +41,7 @@ GOLDEN_PATH = "golden.json"
 BUDGET_CFG_PATH = "budget_config_2level.json"
 # LOG_DIR = "logs_2level"
 # LOG_DIR = "logs_security_critical"
-LOG_DIR = "injection_logs"
+LOG_DIR = "logs_final_inj"
 
 TRUST_UNKNOWN = "UNKNOWN"
 TRUST_TRUSTED = "TRUSTED"
@@ -328,6 +328,7 @@ class VerifierPolicyServer:
         self.golden = golden_db
         # cache last batch majorities (from GET_WINDOWS ML batch)
         self.last_batch_majority: Dict[str, Dict[str, Any]] = {}
+        self.logger = logging.getLogger("verifier")
 
         # Devices
         self.devices: Dict[str, DeviceConn] = {}
@@ -391,18 +392,18 @@ class VerifierPolicyServer:
             # Tune GET_WINDOWS for faster ML detection (affects how fast W windows accumulate)
             if level_name == "security_critical":
                 cfg.get_windows_period_s = {
-                    GateLabel.SAFE: 0.8,
-                    GateLabel.UNCERTAIN: 0.5,
-                    GateLabel.COMPROMISED: 0.6,
+                    GateLabel.SAFE: 0.7,
+                    GateLabel.UNCERTAIN: 0.4,
+                    GateLabel.COMPROMISED: 0.4,
                 }
                 cfg.get_windows_max = {
                     GateLabel.SAFE: 20,
-                    GateLabel.UNCERTAIN: 40,
-                    GateLabel.COMPROMISED: 20,
+                    GateLabel.UNCERTAIN: 50,
+                    GateLabel.COMPROMISED: 50,
                 }
                 # Optional: attest a bit faster too (not strictly ML detection, but response speed)
                 cfg.attest_period_s = {
-                    GateLabel.SAFE: 15.0,
+                    GateLabel.SAFE: 10.0,
                     GateLabel.UNCERTAIN: 3.0,
                     GateLabel.COMPROMISED: 5.0,
                 }
@@ -410,18 +411,37 @@ class VerifierPolicyServer:
 
             elif level_name == "availability_critical":
                 cfg.get_windows_period_s = {
-                    GateLabel.SAFE: 0.60,
-                    GateLabel.UNCERTAIN: 0.25,
-                    GateLabel.COMPROMISED: 0.25,
+                    GateLabel.SAFE: 1.5,
+                    GateLabel.UNCERTAIN: 1.2,
+                    GateLabel.COMPROMISED: 1.2,
                 }
                 cfg.get_windows_max = {
-                    GateLabel.SAFE: 16,
-                    GateLabel.UNCERTAIN: 30,
-                    GateLabel.COMPROMISED: 30,
+                    GateLabel.SAFE: 15,
+                    GateLabel.UNCERTAIN: 20,
+                    GateLabel.COMPROMISED: 20,
+                }
+                cfg.attest_period_s = {
+                    GateLabel.SAFE: 30.0,
+                    GateLabel.UNCERTAIN: 10.0,
+                    GateLabel.COMPROMISED: 10.0,
                 }
                 # keep attest as-is (your defaults) unless you want faster reaction too
             else:
-                # normal: keep defaults from PolicyConfig()
+                cfg.get_windows_period_s = {
+                    GateLabel.SAFE: 1.0,
+                    GateLabel.UNCERTAIN: 0.5,
+                    GateLabel.COMPROMISED: 0.7,
+                }
+                cfg.get_windows_max = {
+                    GateLabel.SAFE: 20,
+                    GateLabel.UNCERTAIN: 30,
+                    GateLabel.COMPROMISED: 30,
+                }
+                cfg.attest_period_s = {
+                    GateLabel.SAFE: 20.0,
+                    GateLabel.UNCERTAIN: 5.0,
+                    GateLabel.COMPROMISED: 10.0,
+                }
                 pass
 
             return cfg
@@ -431,6 +451,100 @@ class VerifierPolicyServer:
             "availability_critical": _mk_policy_cfg_for_level("availability_critical"),
             "security_critical": _mk_policy_cfg_for_level("security_critical"),
         }
+
+        ##helpers for batched
+    def _chunk(self, xs: List[int], n: int) -> List[List[int]]:
+        return [xs[i:i+n] for i in range(0, len(xs), n)]
+
+    async def _attest_partial_once_indices(
+        self, dev: str, indices: List[int], nonce: str, timeout: float = 12.0
+    ) -> dict:
+        if not indices:
+            return {"type": "ERROR", "reason": "empty_indices"}
+
+        resp = await self.send_request_timed(dev, {
+            "type": "ATTEST_REQUEST",
+            "mode": "PARTIAL_BLOCKS",
+            "region": "fw",
+            "nonce": nonce,
+            "indices": indices
+        }, timeout=timeout)
+
+        if isinstance(resp, dict):
+            resp["_indices"] = indices
+            resp["_k"] = len(indices)
+        return resp
+    
+    async def attest_partial_batched_once(self, dev: str, k: int, timeout: float = 12.0) -> dict:
+        bc = self.get_block_count(dev)
+        if bc <= 0:
+            return {"type": "ERROR", "reason": "no_golden_blocks"}
+
+        k = max(1, min(int(k), bc))
+        lru = self._get_block_lru(dev)
+        if lru is None:
+            return {"type": "ERROR", "reason": "no_golden_blocks"}
+
+        # πάρε ΟΛΑ τα indices upfront
+        indices_all = lru.pick(k, pool_frac=0.25, pool_min=32)
+
+        # chunk size από caps (HELLO)
+        caps = self._caps(dev)
+        max_req = int(caps.get("max_req_blocks", 32) or 32)
+        batch = max(1, max_req)  # ή min(max_req, 32) αν θες hard cap
+
+        chunks = self._chunk(indices_all, batch)
+
+        # ίδιο nonce σε όλα τα chunks (ίδιο session binding)
+        nonce = secrets.token_hex(8)
+
+        t0 = time.perf_counter()
+        req_bytes_sum = 0
+        resp_bytes_sum = 0
+
+        last_resp: dict = {"type": "ERROR", "reason": "no_chunks"}
+
+        for bi, chunk in enumerate(chunks):
+            r = await self._attest_partial_once_indices(dev, chunk, nonce=nonce, timeout=timeout)
+
+            if isinstance(r, dict):
+                req_bytes_sum += int(r.get("_req_bytes", 0) or 0)
+                resp_bytes_sum += int(r.get("_resp_bytes", 0) or 0)
+
+            last_resp = r if isinstance(r, dict) else {"type": "ERROR", "reason": "bad_resp"}
+
+            # EARLY STOP: αν αποτύχει ένα batch, κόβεις εδώ
+            if not bool(last_resp.get("verify_ok", False)):
+                last_resp["_batched"] = True
+                last_resp["_batch_size"] = batch
+                last_resp["_batch_index"] = bi
+                last_resp["_batch_count"] = len(chunks)
+                last_resp["_indices_all"] = indices_all
+                last_resp["_k_total"] = k
+                last_resp["_nonce"] = nonce
+
+                # totals μέχρι το fail (χρήσιμο)
+                rtt_ms = (time.perf_counter() - t0) * 1000.0
+                last_resp["_rtt_ms_total"] = round(rtt_ms, 2)
+                last_resp["_req_bytes_total"] = req_bytes_sum
+                last_resp["_resp_bytes_total"] = resp_bytes_sum
+                return last_resp
+
+        # αν όλα ΟΚ:
+        rtt_ms = (time.perf_counter() - t0) * 1000.0
+        ok_resp = dict(last_resp)
+        ok_resp["verify_ok"] = True
+        ok_resp["verify_reason"] = "ok"
+        ok_resp["_batched"] = True
+        ok_resp["_batch_size"] = batch
+        ok_resp["_batch_count"] = len(chunks)
+        ok_resp["_indices_all"] = indices_all
+        ok_resp["_k_total"] = k
+        ok_resp["_nonce"] = nonce
+        ok_resp["_rtt_ms_total"] = round(rtt_ms, 2)
+        ok_resp["_req_bytes_total"] = req_bytes_sum
+        ok_resp["_resp_bytes_total"] = resp_bytes_sum
+        return ok_resp
 
     def _load_device_caps(self):
         try:
@@ -876,7 +990,9 @@ class VerifierPolicyServer:
             return None
         lru = self.block_lru.get(dev)
         if lru is None:
-            lru = DeviceLRUBlocks.fresh(bc)  # determ
+            seed = (hash(dev) & 0xFFFFFFFF)
+            lru = DeviceLRUBlocks.fresh(bc, seed=seed)
+           #lru = DeviceLRUBlocks.fresh(bc)  # determ
             self.block_lru[dev] = lru
             self._save_lru_state()
         else:
@@ -933,6 +1049,19 @@ class VerifierPolicyServer:
         fp = self.attest_fp.get(dev)
         if not fp:
             return
+
+        # --- summarize indices ---
+        idx_list = indices if isinstance(indices, list) else None
+        idx_count = len(idx_list) if idx_list is not None else None
+
+        # small sample only (so logs don't explode)
+        idx_sample = None
+        if idx_list is not None:
+            if len(idx_list) <= 16:
+                idx_sample = idx_list
+            else:
+                idx_sample = idx_list[:8] + ["..."] + idx_list[-8:]
+
         self._jwrite(fp, {
             "ts_ms": ts_ms(),
             "device": dev,
@@ -941,7 +1070,11 @@ class VerifierPolicyServer:
             "trigger": trigger,
             "ml": ml,
             "k": k,
-            "indices": indices,
+
+            # ✅ instead of dumping full indices
+            "indices_count": idx_count,
+            "indices_sample": idx_sample,
+
             "trust_before": trust_before,
             "trust_after": trust_after,
             "verify_ok": resp.get("verify_ok"),
@@ -951,6 +1084,13 @@ class VerifierPolicyServer:
             "resp_bytes": resp.get("_resp_bytes"),
             "budget_tokens_after": resp.get("_budget_tokens_after"),
             "budget_cost_units": resp.get("_budget_cost_units"),
+
+            # ✅ extra batch metadata if present
+            "batched": resp.get("_batched"),
+            "batch_size": resp.get("_batch_size"),
+            "batch_index": resp.get("_batch_index"),
+            "batch_count": resp.get("_batch_count"),
+            "k_total": resp.get("_k_total"),
         })
 
     # ----------------- RX loop -----------------
@@ -1290,7 +1430,8 @@ class VerifierPolicyServer:
         if lru is None:
             return {"type": "ERROR", "reason": "no_golden_blocks"}
 
-        indices = sorted(lru.pick(k))  # determ
+        indices = lru.pick(k, pool_frac=0.25, pool_min=32)
+        #indices = sorted(lru.pick(k))  # determ
         nonce = secrets.token_hex(8)
 
         resp = await self.send_request_timed(dev, {
@@ -1314,7 +1455,7 @@ class VerifierPolicyServer:
 
             trust_before = dc.trust_state
 
-            resp = await self.attest_partial_once(dev, k=k, timeout=12.0)
+            resp = await self.attest_partial_batched_once(dev, k=k, timeout=12.0)
             self._update_trust_from_attest(dev, resp if isinstance(resp, dict) else {}, attempt=1)
 
             # FIX: reset HGB baseline ONLY on PARTIAL FAIL (όχι στο success)
@@ -1331,8 +1472,8 @@ class VerifierPolicyServer:
                     self._save_lru_state()
 
             trust_after = dc.trust_state if dev in self.devices else TRUST_UNKNOWN
-            indices = resp.get("_indices") if isinstance(resp, dict) else None
-            kk = resp.get("_k") if isinstance(resp, dict) else k
+            indices = resp.get("_indices_all") if isinstance(resp, dict) else None
+            kk = resp.get("_k_total") if isinstance(resp, dict) else k
 
             if isinstance(resp, dict) and ml:
                 resp["_budget_cost_units"] = ml.get("budget_cost_units")

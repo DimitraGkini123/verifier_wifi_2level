@@ -152,8 +152,8 @@ class PolicyConfig:
     # =========================
     # NEW: Asymmetric gate batch decision
     # =========================
-    gate_safe_min_frac: float = 0.95     # SAFE only if >=95% SAFE in batch
-    gate_comp_min_frac: float = 0.10    # COMPROMISED if >=10% COMP in batch
+    gate_safe_min_frac: float = 0.80     # SAFE only if >=95% SAFE in batch
+    gate_comp_min_frac: float = 0.30    # COMPROMISED if >=10% COMP in batch
     gate_comp_min_count: int = 6         # OR if >=2 COMP windows in batch
     gate_asym_enabled: bool = True
 

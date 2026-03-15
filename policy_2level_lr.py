@@ -172,11 +172,17 @@ class Device2StagePolicy:
         
         # EXACTLY as in training add_ratio_features()
         base = {}
-        base["cyc_per_us"] = float(window.get("cyc_per_us", dC / (dT + self.EPS)))
-        base["lsu_per_cyc"] = dL / (dC + 1.0)  # safe_div logic
-        base["cpi_per_cyc"] = dP / (dC + 1.0)
-        base["exc_per_cyc"] = dE / (dC + 1.0)
-        base["fold_per_cyc"] = dF / (dC + 1.0)
+        
+        #base["cyc_per_us"] = float(window.get("cyc_per_us", dC / (dT + self.EPS)))
+        #base["lsu_per_cyc"] = dL / (dC + 1.0)  # safe_div logic
+        #base["cpi_per_cyc"] = dP / (dC + 1.0)
+        #ase["exc_per_cyc"] = dE / (dC + 1.0)
+        #base["fold_per_cyc"] = dF / (dC + 1.0)
+        base["cyc_per_us"]  = float(window.get("cyc_per_us", dC / (dT + self.EPS)))
+        base["lsu_per_cyc"] = dL / (dC + self.EPS)
+        base["cpi_per_cyc"] = dP / (dC + self.EPS)
+        base["exc_per_cyc"] = dE / (dC + self.EPS)
+        base["fold_per_cyc"]= dF / (dC + self.EPS)
         
         return base
 

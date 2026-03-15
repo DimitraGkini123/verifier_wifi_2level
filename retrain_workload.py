@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import joblib
+import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -105,7 +106,74 @@ def drop_after_switch(df: pd.DataFrame, drop_n: int) -> pd.DataFrame:
             cooldown -= 1
 
     return d[keep].copy()
+def plot_confusion_matrix(cm: np.ndarray, class_names: list[str], title: str, out_path: str):
+    fig = plt.figure(figsize=(6.2, 5.2))
+    ax = fig.add_subplot(111)
 
+    im = ax.imshow(cm, interpolation="nearest")
+    ax.set_title(title)
+    fig.colorbar(im, ax=ax)
+
+    ax.set_xticks(np.arange(len(class_names)))
+    ax.set_yticks(np.arange(len(class_names)))
+    ax.set_xticklabels(class_names, rotation=45, ha="right")
+    ax.set_yticklabels(class_names)
+
+    ax.set_ylabel("True")
+    ax.set_xlabel("Predicted")
+
+    # write counts
+    maxv = cm.max() if cm.size else 1
+    thresh = maxv * 0.5
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            v = int(cm[i, j])
+            ax.text(j, i, str(v),
+                    ha="center", va="center",
+                    color="white" if v > thresh else "black")
+
+    fig.tight_layout()
+    fig.savefig(out_path, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_classification_bars(report_dict: dict, class_names: list[str], title: str, out_path: str):
+    # Extract metrics per class (skip averages)
+    prec = []
+    rec  = []
+    f1   = []
+    sup  = []
+
+    for name in class_names:
+        d = report_dict.get(name, None)
+        if d is None:
+            prec.append(0.0); rec.append(0.0); f1.append(0.0); sup.append(0)
+        else:
+            prec.append(float(d.get("precision", 0.0)))
+            rec.append(float(d.get("recall", 0.0)))
+            f1.append(float(d.get("f1-score", 0.0)))
+            sup.append(int(d.get("support", 0)))
+
+    x = np.arange(len(class_names))
+    w = 0.25
+
+    fig = plt.figure(figsize=(7.6, 4.6))
+    ax = fig.add_subplot(111)
+
+    ax.bar(x - w, prec, width=w, label="precision")
+    ax.bar(x,      rec,  width=w, label="recall")
+    ax.bar(x + w,  f1,   width=w, label="f1-score")
+
+    ax.set_title(title)
+    ax.set_xticks(x)
+    ax.set_xticklabels([f"{n}\n(s={s})" for n, s in zip(class_names, sup)], rotation=0)
+    ax.set_ylim(0.0, 1.0)
+    ax.grid(True, axis="y", alpha=0.3)
+    ax.legend()
+
+    fig.tight_layout()
+    fig.savefig(out_path, bbox_inches="tight")
+    plt.close(fig)
 
 def main():
     df = load_windows(WINDOWS_JSONL)
@@ -165,9 +233,35 @@ def main():
     #model.fit(X_tr, y_tr)
     pred = model.predict(X_te)
 
-    print("Confusion:\n", confusion_matrix(y_te, pred))
-    print(classification_report(y_te, pred, digits=4))
-    print("Acc:", accuracy_score(y_te, pred))
+    cm = confusion_matrix(y_te, pred, labels=[0,1,2])
+    rep_txt = classification_report(y_te, pred, labels=[0,1,2], digits=4, target_names=["LIGHT","MEDIUM","HEAVY"])
+    rep_dict = classification_report(y_te, pred, labels=[0,1,2], output_dict=True,
+                                    target_names=["LIGHT","MEDIUM","HEAVY"])
+
+    acc = accuracy_score(y_te, pred)
+
+    print("Confusion:\n", cm)
+    print(rep_txt)
+    print("Acc:", acc)
+
+    # ----- plots -----
+    Path("viz_level2a_accuracies").mkdir(parents=True, exist_ok=True)
+
+    plot_confusion_matrix(
+        cm=cm,
+        class_names=["LIGHT","MEDIUM","HEAVY"],
+        title=f"Workload classifier confusion matrix (Acc={acc:.4f})",
+        out_path="assets/level2a_confusion.png"
+    )
+
+    plot_classification_bars(
+        report_dict=rep_dict,
+        class_names=["LIGHT","MEDIUM","HEAVY"],
+        title="Workload classifier per-class metrics",
+        out_path="viz_leve2a_accuracies/level2a_metrics.png"
+    )
+
+    print("Saved plots -> assets/level2a_confusion.png, assets/level2a_metrics.png")
 
     Path(OUT_PATH_WORKLOAD).parent.mkdir(parents=True, exist_ok=True)
     joblib.dump({"features": FEATURES, "device_col": DEVICE_COL, "model": model}, OUT_PATH_WORKLOAD)

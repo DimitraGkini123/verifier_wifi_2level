@@ -5,6 +5,7 @@
 import argparse
 import json
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 import numpy as np
 import pandas as pd
@@ -112,6 +113,68 @@ def drop_after_switch(df: pd.DataFrame, drop_n: int) -> pd.DataFrame:
 
     return d[keep].copy()
 
+def plot_confusion_matrix(cm, class_names, title, out_path):
+    fig = plt.figure(figsize=(5.5, 4.8))
+    ax = fig.add_subplot(111)
+
+    im = ax.imshow(cm, interpolation="nearest")
+    ax.set_title(title)
+    fig.colorbar(im, ax=ax)
+
+    ax.set_xticks(np.arange(len(class_names)))
+    ax.set_yticks(np.arange(len(class_names)))
+    ax.set_xticklabels(class_names, rotation=30, ha="right")
+    ax.set_yticklabels(class_names)
+
+    ax.set_ylabel("True")
+    ax.set_xlabel("Predicted")
+
+    thresh = cm.max() * 0.5 if cm.size else 1
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            val = int(cm[i, j])
+            ax.text(j, i, str(val),
+                    ha="center", va="center",
+                    color="white" if val > thresh else "black")
+
+    fig.tight_layout()
+    fig.savefig(out_path, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_metrics(report_dict, class_names, title, out_path):
+    precision = []
+    recall = []
+    f1 = []
+    support = []
+
+    for name in class_names:
+        d = report_dict.get(name, {})
+        precision.append(d.get("precision", 0))
+        recall.append(d.get("recall", 0))
+        f1.append(d.get("f1-score", 0))
+        support.append(int(d.get("support", 0)))
+
+    x = np.arange(len(class_names))
+    w = 0.25
+
+    fig = plt.figure(figsize=(7, 4.5))
+    ax = fig.add_subplot(111)
+
+    ax.bar(x - w, precision, width=w, label="precision")
+    ax.bar(x, recall, width=w, label="recall")
+    ax.bar(x + w, f1, width=w, label="f1-score")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([f"{n}\n(s={s})" for n, s in zip(class_names, support)])
+    ax.set_ylim(0, 1.0)
+    ax.set_title(title)
+    ax.grid(True, axis="y", alpha=0.3)
+    ax.legend()
+
+    fig.tight_layout()
+    fig.savefig(out_path, bbox_inches="tight")
+    plt.close(fig)
 
 def main():
     ap = argparse.ArgumentParser()
@@ -188,9 +251,47 @@ def main():
     model.fit(X_tr, y_tr)
     pred = model.predict(X_te)
 
-    print("Confusion:\n", confusion_matrix(y_te, pred))
-    print(classification_report(y_te, pred, digits=4))
-    print("Acc:", accuracy_score(y_te, pred))
+    cm = confusion_matrix(y_te, pred, labels=[0,1])
+    acc = accuracy_score(y_te, pred)
+
+    report_txt = classification_report(
+        y_te,
+        pred,
+        labels=[0,1],
+        target_names=["INJECTION", "INTERRUPTION"],
+        digits=4
+    )
+
+    report_dict = classification_report(
+        y_te,
+        pred,
+        labels=[0,1],
+        target_names=["INJECTION", "INTERRUPTION"],
+        output_dict=True
+    )
+
+    print("Confusion:\n", cm)
+    print(report_txt)
+    print("Acc:", acc)
+
+    # ----- SAVE PLOTS -----
+    Path("viz_level2b_accuracies").mkdir(parents=True, exist_ok=True)
+
+    plot_confusion_matrix(
+        cm,
+        ["INJECTION", "INTERRUPTION"],
+        f"Level2b Attack-Type Confusion (Acc={acc:.4f})",
+        "viz_level2b_accuracies/level2b_confusion.png"
+    )
+
+    plot_metrics(
+        report_dict,
+        ["INJECTION", "INTERRUPTION"],
+        "Level2b Per-Class Metrics",
+        "viz_level2b_accuracies/level2b_metrics.png"
+    )
+
+    print("Saved plots -> assets/level2b_confusion.png, assets/level2b_metrics.png")
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)

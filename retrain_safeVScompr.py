@@ -1,5 +1,5 @@
 ## FIXED TRAINING SCRIPT - NO LABEL LEAKAGE
-## python retrain_safeVScompr_FIXED.py --safe train_logs/safe2.jsonl train_logs/safe1.jsonl --comp train_logs/memscan.jsonl train_logs/alu.jsonl --W 5 --out models/level1_fixed.joblib
+## python retrain_safeVScompr.py --safe train_logs/safe2.jsonl train_logs/safe1.jsonl train_logs/safe3.jsonl --comp train_logs/memscan.jsonl train_logs/alu.jsonl  train_logs/interr.jsonl --W 5 --out models/level1_fixed.joblib
 
 import argparse, json, os
 import numpy as np

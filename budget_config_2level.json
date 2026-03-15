@@ -1,27 +1,27 @@
 {
   "levels": {
     "availability_critical": {
-      "per_min_units": 20,
-      "cap_units": 20,
-      "min_k": 1,
+      "per_min_units": 60,
+      "cap_units": 60,
+      "min_k": 8,
       "coverage": {
-        "LIGHT": 0.60,
-        "MEDIUM": 0.35,
-        "HEAVY": 0.20,
-        "UNKNOWN": 0.60,
-        "UNCERTAIN": 0.80,
+        "LIGHT": 0.20,
+        "MEDIUM": 0.15,
+        "HEAVY": 0.05,
+        "UNKNOWN": 0.50,
+        "UNCERTAIN": 0.50,
         "COMPROMISED": 0.80
       }
     },
     "normal": {
-      "per_min_units": 60,
-      "cap_units": 70,
-      "min_k": 1,
+      "per_min_units": 100,
+      "cap_units": 100,
+      "min_k": 8,
       "coverage": {
-        "LIGHT": 0.60,
-        "MEDIUM": 0.40,
+        "LIGHT": 0.30,
+        "MEDIUM": 0.20,
         "HEAVY": 0.20,
-        "UNKNOWN": 0.60,
+        "UNKNOWN": 0.50,
         "UNCERTAIN": 0.80,
         "COMPROMISED": 0.80
       }
